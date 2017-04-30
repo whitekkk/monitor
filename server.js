@@ -237,7 +237,6 @@ app.use(express.static('dist'))
         this.vb = varbinds[0]
         this.v = timestamp(this.vb.value)
         // console.log(this.v)
-        console.log(this.vb)
         res.send(this.vb)
       }
       session.close()
@@ -260,7 +259,6 @@ app.use(express.static('dist'))
         return
       }
       // console.log(networks)
-      console.log(networks)
       res.send(networks)
     })
   })
