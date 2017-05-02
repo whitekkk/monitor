@@ -47,7 +47,7 @@ app.use(express.static('dist'))
         console.log('IsDescr Fail :(')
       } else {
         varbinds.forEach(function (vb) {
-          var ss = vb.value
+          // var ss = vb.value
           value.push({'index':vb.oid[10],'interface':vb.value})
           // console.log(value)
         })
@@ -64,7 +64,7 @@ app.use(express.static('dist'))
         console.log('MTU Fail :(')
       } else {
         varbinds.forEach(function (vb) {
-          var ss = vb.value
+          // var ss = vb.value
           value.push({'index':vb.oid[10],'mtu':vb.value})
           // console.log(value)
         })
@@ -81,7 +81,7 @@ app.use(express.static('dist'))
         console.log('Speed Fail :(')
       } else {
         varbinds.forEach(function (vb) {
-          var ss = vb.value
+          // var ss = vb.value
           value.push({'index':vb.oid[10],'speed':vb.value})
           // console.log(value)
         })
@@ -98,8 +98,8 @@ app.use(express.static('dist'))
         console.log('Mac Fail :(')
       } else {
         varbinds.forEach(function (vb) {
-          var ss = vb.value
-          value.push({'index':vb.oid[10],'mac':vb.value})
+          // var ss = vb.value
+          value.push({'index':vb.oid[10],'mac':vb.value.toString()})
           // console.log(value)
         })
         res.send(value)
@@ -115,7 +115,7 @@ app.use(express.static('dist'))
         console.log('Status Fail :(')
       } else {
         varbinds.forEach(function (vb) {
-          var ss = vb.value
+          // var ss = vb.value
           value.push({'index':vb.oid[10],'status':vb.value})
           // console.log(value)
         })
@@ -132,7 +132,7 @@ app.use(express.static('dist'))
         console.log('LastChange Fail :(')
       } else {
         varbinds.forEach(function (vb) {
-          var ss = vb.value
+          // var ss = vb.value
           value.push({'index':vb.oid[10],'lastChange':vb.value})
           // console.log(value)
         })
@@ -149,7 +149,7 @@ app.use(express.static('dist'))
         console.log('InOctets Fail :(')
       } else {
         varbinds.forEach(function (vb) {
-          var ss = vb.value
+          // var ss = vb.value
           value.push({'index':vb.oid[10],'inOctets':vb.value})
           // console.log(value)
         })
@@ -166,7 +166,7 @@ app.use(express.static('dist'))
         console.log('OutOctets Fail :(')
       } else {
         varbinds.forEach(function (vb) {
-          var ss = vb.value
+          // var ss = vb.value
           value.push({'index':vb.oid[10],'outOctets':vb.value})
           // console.log(value)
         })
@@ -206,7 +206,7 @@ app.use(express.static('dist'))
         console.log('Index Fail :(')
       } else {
         varbinds.forEach(function (vb) {
-          var ss = vb.value
+          // var ss = vb.value
           value.push({'index':vb.value})
         })
         res.send(value)

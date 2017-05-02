@@ -93,7 +93,7 @@
             <div v-else>
               <p v-for="data in datas">
                   Interface = {{data.interface}} <br>
-                  <!-- {{data.mac}} -->
+                  Mac = {{data.mac}} <br>
                   MTU = {{data.mtu}} <br>
                   Status = {{data.status}} <br>
                   Last = {{data.lastChange}} <br>
