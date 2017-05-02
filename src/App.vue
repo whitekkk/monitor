@@ -150,12 +150,6 @@ export default {
   mounted () {
     var vm = this
 
-    vm.getTcpIn()
-    vm.getTcpOut()
-    vm.getUdpIn()
-    vm.getUdpOut()
-    vm.getIcmpIn()
-    vm.getIcmpOut()
     vm.getSysName()
     vm.getDetail()
 
@@ -179,6 +173,14 @@ export default {
     vm.update = setInterval(function(){
       vm.getInOctets()
       vm.getOutOctets()
+
+      vm.getTcpIn()
+      vm.getTcpOut()
+      vm.getUdpIn()
+      vm.getUdpOut()
+      vm.getIcmpIn()
+      vm.getIcmpOut()
+
       if (!vm.datas) {
         clearInterval(vm.update)
       }
