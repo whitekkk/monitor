@@ -242,7 +242,7 @@ app.use(express.static('dist'))
       session.close()
     })
   })
-  app.get('/speed', function (req, res, next) {
+  app.get('/upAndDown', function (req, res, next) {
     var test = speedTest({maxTime: 8000})
     test.on('data', function (data) {
       // console.log(data)
@@ -262,16 +262,78 @@ app.use(express.static('dist'))
       res.send(networks)
     })
   })
-  // app.get('/mac', function (req, res, next) {
-  //   scanner.scan((err, networks) => {
-  //     if (err) {
-  //       // console.error(err)
-  //       return
-  //     }
-  //     // console.log(networks)
-  //     res.send(networks)
-  //   })
-  // })
+  app.get('/tcpin', function (req, res, next) {
+    var session = new snmp.Session({ host: host, community: community })
+    session.get({ oid: '.1.3.6.1.2.1.6.10.0' }, function (err, varbinds) {
+      if (err) {
+        console.log(err)
+      } else {
+        var tcpin = varbinds[0].value
+        res.send(tcpin.toString())
+      }
+      session.close()
+    })
+  })
+  app.get('/tcpout', function (req, res, next) {
+    var session = new snmp.Session({ host: host, community: community })
+    session.get({ oid: '.1.3.6.1.2.1.6.11.0' }, function (err, varbinds) {
+      if (err) {
+        console.log(err)
+      } else {
+        var tcpout = varbinds[0].value
+        res.send(tcpout.toString())
+      }
+      session.close()
+    })
+  })
+  app.get('/udpin', function (req, res, next) {
+    var session = new snmp.Session({ host: host, community: community })
+    session.get({ oid: '.1.3.6.1.2.1.7.1.0' }, function (err, varbinds) {
+      if (err) {
+        console.log(err)
+      } else {
+        var udpin = varbinds[0].value
+        res.send(udpin.toString())
+      }
+      session.close()
+    })
+  })
+  app.get('/udpout', function (req, res, next) {
+    var session = new snmp.Session({ host: host, community: community })
+    session.get({ oid: '.1.3.6.1.2.1.7.4.0' }, function (err, varbinds) {
+      if (err) {
+        console.log(err)
+      } else {
+        var udpout = varbinds[0].value
+        res.send(udpout.toString())
+      }
+      session.close()
+    })
+  })
+  app.get('/icmpin', function (req, res, next) {
+    var session = new snmp.Session({ host: host, community: community })
+    session.get({ oid: '.1.3.6.1.2.1.5.1.0' }, function (err, varbinds) {
+      if (err) {
+        console.log(err)
+      } else {
+        var icmpin = varbinds[0].value
+        res.send(icmpin.toString())
+      }
+      session.close()
+    })
+  })
+  app.get('/icmpout', function (req, res, next) {
+    var session = new snmp.Session({ host: host, community: community })
+    session.get({ oid: '.1.3.6.1.2.1.5.14.0' }, function (err, varbinds) {
+      if (err) {
+        console.log(err)
+      } else {
+        var icmpout = varbinds[0].value
+        res.send(icmpout.toString())
+      }
+      session.close()
+    })
+  })
 
 app.listen(3001, function () {
   console.log('Example app listening on port 3001!')

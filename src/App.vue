@@ -89,23 +89,29 @@
         <div class="panel panel-primary">
           <div class="panel-heading">All Ports</div>
           <div class="panel-body box1">
-            <div v-if="!interfaces" class="loader"></div>
+            <div v-if="!datas" class="loader"></div>
             <div v-else>
               <p v-for="data in datas">
-                  {{data.interface}}
+                  Interface = {{data.interface}} <br>
                   <!-- {{data.mac}} -->
-                  {{data.mtu}}
-                  {{data.status}}
-                  {{data.lastChange}}
-                  {{data.inOctets}}
-                  {{data.outOctets}}
+                  MTU = {{data.mtu}} <br>
+                  Status = {{data.status}} <br>
+                  Last = {{data.lastChange}} <br>
+                  In = {{data.inOctets}} <br>
+                  Out = {{data.outOctets}} <br>
                  </p>
             </div>
           </div>
         </div>
 
     </div>
-
+    <br>
+    tcp in = {{tcp.in}} <br>
+    tcp out = {{tcp.out}} <br>
+    udp in = {{udp.in}} <br>
+    udp out = {{udp.out}} <br>
+    icmp in = {{icmp.in}} <br>
+    icmp out = {{icmp.out}} <br>
   </div>
 </template>
 
@@ -116,6 +122,18 @@ export default {
   data () {
     return {
       detail: '',
+      tcp: {
+        in: '',
+        out: ''
+      },
+      udp: {
+        in: '',
+        out: ''
+      },
+      icmp: {
+        in: '',
+        out: ''
+      },
       datas: false,
       uptime: '',
       uptimeWifi: '',
@@ -132,6 +150,12 @@ export default {
   mounted () {
     var vm = this
 
+    vm.getTcpIn()
+    vm.getTcpOut()
+    vm.getUdpIn()
+    vm.getUdpOut()
+    vm.getIcmpIn()
+    vm.getIcmpOut()
     vm.getSysName()
     vm.getDetail()
 
@@ -141,16 +165,16 @@ export default {
 
     vm.getIndex()
     vm.getUptime()
+    vm.getUpAndDown()
 
-    if (vm.datas) {
+    // if (vm.datas) {
       vm.getIsDescr()
-      vm.getSpeed()
       vm.getMtu()
       vm.getSpeed()
       vm.getMac()
       vm.getStat()
       vm.getLastChange()
-    }
+    // }
 
     vm.update = setInterval(function(){
       vm.getInOctets()
@@ -179,21 +203,34 @@ export default {
     },
     getIsDescr () {
       var vm = this
+      // console.log('IsDescr');
       vm.$http.get('/isDescr').then((res) => {
         var i = ''
         res.data.map((item) => {
           i = vm.datas.findIndex(items => items.index === item.index)
           vm.datas[i].interface = item.interface
+          // console.log(item.interface)
         })
       })
     },
     getMtu () {
       var vm = this
+      // console.log('MTU');
       vm.$http.get('/mtu').then((res) => {
         var i = ''
         res.data.map((item) => {
           i = vm.datas.findIndex(items => items.index === item.index)
           vm.datas[i].mtu = item.mtu
+        })
+      })
+    },
+    getSpeed () {
+      var vm = this
+      vm.$http.get('/speed').then((res) => {
+        var i = ''
+        res.data.map((item) => {
+          i = vm.datas.findIndex(items => items.index === item.index)
+          vm.datas[i].speed = item.speed
         })
       })
     },
@@ -268,10 +305,13 @@ export default {
         vm.sysName = res.data
       })
     },
-    getSpeed () {
+    getUpAndDown () {
+      // console.log('updown')
       var vm = this
-      vm.$http.get('/speed').then((res) => {
+      vm.$http.get('/upAndDown').then((res) => {
         vm.speed = res.data
+        vm.download = vm.speed.speeds.download
+        vm.upload = vm.speed.speeds.upload
 
         var barData = {
              labels : ['Download','Upload'],
@@ -307,6 +347,48 @@ export default {
         // console.log(vm.wifis)
       })
 
+    },
+    getTcpIn () {
+      var vm = this
+      vm.$http.get('/tcpin').then((res) => {
+        // console.log(vm.uptime)
+        vm.tcp.in = res.data
+      })
+    },
+    getTcpOut () {
+      var vm = this
+      vm.$http.get('/tcpout').then((res) => {
+        // console.log(vm.uptime)
+        vm.tcp.out = res.data
+      })
+    },
+    getUdpIn () {
+      var vm = this
+      vm.$http.get('/udpin').then((res) => {
+        // console.log(vm.uptime)
+        vm.udp.in = res.data
+      })
+    },
+    getUdpOut () {
+      var vm = this
+      vm.$http.get('/udpout').then((res) => {
+        // console.log(vm.uptime)
+        vm.udp.out = res.data
+      })
+    },
+    getIcmpIn () {
+      var vm = this
+      vm.$http.get('/icmpin').then((res) => {
+        // console.log(vm.uptime)
+        vm.icmp.in = res.data
+      })
+    },
+    getIcmpOut () {
+      var vm = this
+      vm.$http.get('/icmpout').then((res) => {
+        // console.log(vm.uptime)
+        vm.icmp.out = res.data
+      })
     },
     timeCheck (uptime) {
       return humanizeDuration(uptime)
