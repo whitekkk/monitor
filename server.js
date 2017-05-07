@@ -99,6 +99,7 @@ app.use(express.static('dist'))
       } else {
         varbinds.forEach(function (vb) {
           // var ss = vb.value
+          // console.log(varbinds)
           value.push({'index':vb.oid[10],'mac':vb.value.toString()})
           // console.log(value)
         })

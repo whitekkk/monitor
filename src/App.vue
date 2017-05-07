@@ -28,8 +28,8 @@
         <div class="panel panel-primary">
           <div class="panel-heading">
             WIFI
-            <button v-if="check" @click="pause" class="btn btn-default"> &#10074;&#10074; </button>
-            <button v-else @click="resume" class="btn btn-default"> &#9658; </button>
+            <!-- <button v-if="check" @click="pause" class="btn btn-default"> &#10074;&#10074; </button> -->
+            <!-- <button v-else @click="resume" class="btn btn-default"> &#9658; </button> -->
           </div>
           <div class="panel-body box1">
             <div v-if="!wifis" class="loader"></div>
@@ -93,7 +93,7 @@
             <div v-else>
               <p v-for="data in datas">
                   Interface = {{data.interface}} <br>
-                  Mac = {{data.mac}} <br>
+                  <!-- Mac = {{data.mac}} <br> -->
                   MTU = {{data.mtu}} <br>
                   Status = {{data.status}} <br>
                   Last = {{data.lastChange}} <br>
