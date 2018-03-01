@@ -1,6 +1,37 @@
 var express = require('express')
 var app = express()
 
+var bodyParser = require('body-parser')
+var jsonParser = bodyParser.json()
+
+var PORT = 162;
+var HOST = '10.4.15.113';
+
+var dgram = require('dgram');
+var server = dgram.createSocket('udp4');
+
+var traps = ''
+server.on('listening', function () {
+    var address = server.address();
+    console.log('UDP Server listening on ' + address.address + ":" + address.port);
+})
+
+server.on('message', function (message, remote) {
+  traps = message
+  if(message.indexOf('Interface') != -1){
+
+  }
+     //console.log(message.indexOf('Interface'));
+     console.log(remote.address + ':' + remote.port +' - ' + message);
+})
+
+server.bind(PORT, HOST)
+
+
+app.use(jsonParser)
+
+app.use(bodyParser.urlencoded({extended: true}))
+
 app.use(express.static('dist'))
   var network = require('network')
   var speedTest = require('speedtest-net')
@@ -8,6 +39,8 @@ app.use(express.static('dist'))
   var moment = require('moment')
   var host = ''
   var valx = 0
+
+
   getGateway()
   // getVal()
   var community = 'public'
@@ -18,11 +51,11 @@ app.use(express.static('dist'))
   }
   function getGateway(){
     network.get_gateway_ip(function(err, ip) {
-      host = (err || ip)
+      // host = (err || ip)
+      host = "10.4.15.13"
       // console.log(ip)
     })
   }
-
   app.get('/detail', function (req, res, next) {
     var session = new snmp.Session({ host: host, community: community })
     var oid = [1, 3, 6, 1, 2, 1, 1, 1, 0]
@@ -33,7 +66,7 @@ app.use(express.static('dist'))
       } else {
         this.vb = varbinds[0]
         res.send(this.vb.value)
-        console.log('The system description is "' + this.vb.value + '"')
+        // console.log('The system description is "' + this.vb.value + '"')
       }
       session.close()
     })
@@ -53,6 +86,37 @@ app.use(express.static('dist'))
         })
         res.send(value)
       }
+      session.close();
+    })
+  })
+
+  app.get('/cpu', function (req, res, next) {
+    var session = new snmp.Session({ host: host, community: community })
+    var oid = '.1.3.6.1.4.1.9.2.1.58.0'
+    session.get({ oid: oid }, function (err, varbinds) {
+      if (err) {
+        // console.log(err)
+        console.log('CPU Fail!')
+      } else {
+        this.vb = varbinds[0]
+        res.send(this.vb.value.toString())
+      }
+    })
+  })
+
+  app.get('/ram', function (req, res, next) {
+    var session = new snmp.Session({ host: host, community: community })
+    var oid = '.1.3.6.1.4.1.9.2.1.8.0'
+    session.get({ oid: oid }, function (err, varbinds) {
+      if (err) {
+        // console.log(err)
+        console.log('RAM Fail!')
+      } else {
+        this.vb = varbinds[0]
+        res.send((this.vb.value / 1048576).toString())
+        // console.log(this.vb.value)
+        // console.log('The system description is "' + this.vb.value + '"')
+      }
     })
   })
 
@@ -70,6 +134,7 @@ app.use(express.static('dist'))
         })
         res.send(value)
       }
+      session.close();
     })
   })
 
@@ -87,6 +152,7 @@ app.use(express.static('dist'))
         })
         res.send(value)
       }
+      session.close();
     })
   })
 
@@ -105,13 +171,18 @@ app.use(express.static('dist'))
         })
         res.send(value)
       }
+      session.close();
     })
+  })
+
+  app.get('/traps', function (req, res, next) {
+    res.send(traps)
   })
 
   app.get('/stat', function (req, res, next) {
     var value = []
     var session = new snmp.Session({ host: host, community: community })
-    session.getSubtree({ oid: '.1.3.6.1.2.1.2.2.1.8' }, function (error, varbinds) {
+    session.getSubtree({ oid: '.1.3.6.1.2.1.2.2.1.7' }, function (error, varbinds) {
       if (error) {
         console.log('Status Fail :(')
       } else {
@@ -122,8 +193,60 @@ app.use(express.static('dist'))
         })
         res.send(value)
       }
+      session.close();
     })
   })
+
+  app.get('/plug', function (req, res, next) {
+    var value = []
+    var session = new snmp.Session({ host: host, community: community })
+    session.getSubtree({ oid: '.1.3.6.1.2.1.2.2.1.8' }, function (error, varbinds) {
+      if (error) {
+        console.log('Status Fail :(')
+      } else {
+        varbinds.forEach(function (vb) {
+          // var ss = vb.value
+          value.push({'index':vb.oid[10],'plug':vb.value})
+          // console.log(value)
+        })
+        res.send(value)
+      }
+      session.close();
+    })
+  })
+
+  // app.get('/setPort', function (req, res, next) {
+  //   var value = []
+  //   var session = new snmp.Session({ host: host, community: community })
+  //   session.set({ oid: '.1.3.6.1.2.1.2.2.1.7.12', value: 2, type: 2 }, function (error, varbind) {
+  //     if (error) {
+  //         console.log(error);
+  //     } else {
+  //         console.log('The set is done.');
+  //     }
+  // });
+  // })
+
+  // app.post('/setPort', function (req, res) {
+  //   console.log(req.body)
+  // })
+
+  app.post('/setPort', function (req, res) {
+    console.log(req.body.index)
+    console.log(req.body.upDown)
+      var value = []
+      var id = '.1.3.6.1.2.1.2.2.1.7.' + req.body.index
+      var session = new snmp.Session({ host: host, community: community })
+      session.set({ oid: id, value: req.body.upDown, type: 2 }, function (error, varbind) {
+        if (error) {
+            // console.log(error);
+        } else {
+            console.log('The set is done.');
+        }
+        session.close();
+    });
+  })
+
 
   app.get('/lastChange', function (req, res, next) {
     var value = []
@@ -139,6 +262,7 @@ app.use(express.static('dist'))
         })
         res.send(value)
       }
+      session.close();
     })
   })
 
@@ -156,6 +280,7 @@ app.use(express.static('dist'))
         })
         res.send(value)
       }
+      session.close();
     })
   })
 
@@ -173,29 +298,9 @@ app.use(express.static('dist'))
         })
         res.send(value)
       }
+      session.close();
     })
   })
-
-  // app.get('/interface', function (req, res, next) {
-  //   var value = []
-  //   var session = new snmp.Session({ host: host, community: community })
-  //   session.getSubtree({ oid: '.1.3.6.1.2.1.2.2.1.2' }, function (error, varbinds) {
-  //     if (error) {
-  //       // console.log('Fail :(')
-  //     } else {
-  //       varbinds.forEach(function (vb) {
-  //         var ss = vb.value
-  //         // console.log(ss.substr(0, 1))
-  //         if (ss.substr(0, 1)=='V') {
-  //             value.push({'vlan':vb.value})
-  //         }else if(ss.substr(0, 1)=='G'){
-  //             value.push({'interface':vb.value})
-  //         }
-  //       })
-  //       res.send(value)
-  //     }
-  //   })
-  // })
 
   app.get('/index', function (req, res, next) {
     var value = []
@@ -208,10 +313,12 @@ app.use(express.static('dist'))
       } else {
         varbinds.forEach(function (vb) {
           // var ss = vb.value
-          value.push({'index':vb.value})
+          value.push({'index':vb.value, 'interface': 'waiting', 'mtu': 'waiting', 'status': 'waiting', 'plug': 'waiting'})
         })
+        // console.log(value)
         res.send(value)
       }
+      session.close();
     })
   })
 

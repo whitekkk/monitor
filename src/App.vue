@@ -1,123 +1,115 @@
 <template>
   <div id="app">
-  <!-- <div> -->
-  <div class="box">
-    <!-- {{decryptedPayload.toString('hex')}} -->
-    <div class="panel panel-primary">
-        <div class="panel-heading">General</div>
-
-        <div class="panel-body" style="text-align: left">
-          <div v-if="!download" class="loader"></div>
-          <div v-else>
-            Name: {{sysName.value}} <br>
-            IP: {{speed.client.ip}} <br>
-            ISP: {{speed.client.isp}} &emsp;
-            Location: {{speed.server.location}} {{speed.server.cc}} <br>
-            Ping: {{speed.server.ping}} [ Host : {{speed.server.host}} ] <br>
-            Uptime : {{timeCheck(uptime.value*10)}}
-            <!-- {{uptime}} -->
-          </div>
-        </div>
-      </div>
-
-  </div>
-  <div class="col-md-8 boxs">
-
-    <div class="col-md-6 box">
-
-        <div class="panel panel-primary">
-          <div class="panel-heading">
-            WIFI
-            <!-- <button v-if="check" @click="pause" class="btn btn-default"> &#10074;&#10074; </button> -->
-            <!-- <button v-else @click="resume" class="btn btn-default"> &#9658; </button> -->
-          </div>
-          <div class="panel-body box1">
-            <div v-if="!wifis" class="loader"></div>
-            <div v-eslse class="col-xs-12" v-for="wifi in wifis">
-                {{wifi.ssid}} &emsp; [ {{wifi.mac}} ] <br>
-                <div class="progress">
-                  <div :class="'progress-bar progress-bar-'+wifi.stat" role="progressbar"
-                    :aria-valuenow="wifi.per" aria-valuemin="0" aria-valuemax="100"
-                    :style="{'width': wifi.per +'%'}">
-                        {{wifi.rssi}} dB
+    <div class="col-md-8 box">
+      <div class="panel panel-primary">
+        <div class="panel-heading">All Ports</div>
+        <div class="panel-body box1">
+          <div v-if="!datas" class="loader"></div>
+          <div v-else style="width: 720px;">
+            <div v-for="data in datas" style="float:left; height:100px; width: 60px;">
+              <div v-if="data.status === 1">
+                <div v-on:mouseover="mouseOver(data.index)">
+                  <button @click="setInterface(data.index, data.plug)"  class="green">
+                  </button>
+                </div>
+              </div>
+                <div v-else >
+                  <div v-on:mouseover="mouseOver(data.index)">
+                    <button @click="setInterface(data.index, data.plug)"  class="red">
+                    </button>
                   </div>
                 </div>
-                Chanel : {{wifi.channel}}
-                <hr>
+              <p class="inter small"> <br> &nbsp {{shortWords(data.interface, data.index)}} &nbsp </p>
+              <p v-if="data.plug === 1" class="inter small">(In plug)</p>
             </div>
           </div>
         </div>
-
       </div>
-
-      <div class="col-md-6 box">
-
-        <div class="panel panel-primary">
-          <div class="panel-heading">Bandwidth</div>
-          <div class="panel-body">
-             <div v-show="!download" class="loader"></div>
-             <div v-show="download" class="col-xs-12">
-                  Download : {{download}} Mbps
-                  Upload : {{upload}} Mbps
-             </div>
-             <canvas id="income" width="250" height="200"></canvas>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- <div class="col-md-6 box">
-
-          <div class="panel panel-primary">
-            <div class="panel-heading">VLAN</div>
-            <div class="panel-body">
-              <div v-if="!interfaces" class="loader"></div>
-              <div v-else>
-                <p class="p1" v-for="interfaceSe in interfaces">
-                     {{interfaceSe.vlan}} &emsp;
-                   </p>
-              </div>
-            </div>
-          </div>
-
-      </div> -->
-
   </div>
-
-    <div class="col-md-4 box">
-
-        <div class="panel panel-primary">
-          <div class="panel-heading">All Ports</div>
-          <div class="panel-body box1">
-            <div v-if="!datas" class="loader"></div>
-            <div v-else>
-              <p v-for="data in datas">
-                  Interface = {{data.interface}} <br>
-                  <!-- Mac = {{data.mac}} <br> -->
-                  MTU = {{data.mtu}} <br>
-                  Status = {{data.status}} <br>
-                  Last = {{data.lastChange}} <br>
-                  In = {{data.inOctets}} <br>
-                  Out = {{data.outOctets}} <br>
-                 </p>
-            </div>
+  <div class="col-md-4 box">
+    <div class="panel panel-primary">
+      <div class="panel-heading">Port Status</div>
+      <div class="panel-body box20 small">
+        <p>Interface: {{showStats.interface}}</p><br>
+        <p>MTU: {{showStats.mtu}}</p><br>
+        <p v-if="showStats.plug === 1">Plug: In plug</p>
+        <p v-else>Plug: Not plug</p><br>
+        <p v-if="showStats.status === 1">Port: Up</p>
+        <p v-else>Port: Down</p><br><br>
+      </div>
+    </div>
+</div>
+<div class="col-md-4 box">
+  <div class="panel panel-primary">
+    <div class="panel-heading">Trap</div>
+    <div class="panel-body box21" id="data">
+      {{traps}}
+    </div>
+  </div>
+</div>
+  <div class="col-md-8 box">
+    <div class="panel panel-primary">
+      <div class="panel-heading">CPU & MEMORY</div>
+      <div class="panel-body box11">
+        <div style="float:left;" v-if="datacollectioncpu">
+            <h3 class="headline mb-0">CPU</h3>
+            <line-chart :chart-data="datacollectioncpu"
+            :options="options2"
+            :height="260"
+            ></line-chart>
+        </div>
+        <div style="float:left;" v-if="datacollectionram">
+            <h3 class="headline mb-0">Memory</h3>
+            <line-chart :chart-data="datacollectionram"
+            :options="options3"
+            :height="260"
+            ></line-chart>
+        </div>
+      </div>
+    </div>
+</div>
+  <div class="col-md-12 box">
+    <div class="panel panel-primary">
+      <div class="panel-heading">Chart</div>
+      <div class="panel-body box2">
+        <div v-if="!datas" class="loader"></div>
+        <div v-else>
+          <div style="float:left;" v-if="datacollectionudp">
+              <h3 class="headline mb-0">UdpIn / UdpOut</h3>
+              <line-chart :chart-data="datacollectionudp"
+              :options="options"
+              :height="260"
+              ></line-chart>
+          </div>
+          <div style="float:left;" v-if="datacollectiontcp">
+              <h3 class="headline mb-0">TcpIn / TcpOut</h3>
+              <line-chart :chart-data="datacollectiontcp"
+              :options="options"
+              :height="260"
+              ></line-chart>
+          </div>
+          <div style="float:left;" v-if="datacollectionicmp">
+              <h3 class="headline mb-0">IcmpIn / IcmpOut</h3>
+              <line-chart :chart-data="datacollectionicmp"
+              :options="options"
+              :height="260"
+              ></line-chart>
           </div>
         </div>
-
+      </div>
     </div>
-    <br>
-    tcp in = {{tcp.in}} <br>
-    tcp out = {{tcp.out}} <br>
-    udp in = {{udp.in}} <br>
-    udp out = {{udp.out}} <br>
-    icmp in = {{icmp.in}} <br>
-    icmp out = {{icmp.out}} <br>
+</div>
   </div>
 </template>
 
 <script>
-var humanizeDuration = require('humanize-duration')
+
+import LineChart from './lineChart.js'
+import swal from 'sweetalert';
 export default {
+  components: {
+    LineChart
+  },
   name: 'app',
   data () {
     return {
@@ -134,6 +126,92 @@ export default {
         in: '',
         out: ''
       },
+      tcpIn: [],
+      tcpOut: [],
+      udpIn: [],
+      udpOut: [],
+      icmpIn: [],
+      icmpOut: [],
+      cpu: [],
+      ram: [],
+      label: [],
+      datacollectionudp: null,
+      datacollectiontcp: null,
+      datacollectionicmp: null,
+      datacollectioncpu: null,
+      datacollectionram: null,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        elements: {
+          point: {
+            radius: 1
+          }
+        },
+        scales: {
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Packet'
+            }
+          }],
+          xAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Second'
+            }
+          }]
+        }
+      },
+      options2: {
+        responsive: true,
+        maintainAspectRatio: false,
+        elements: {
+          point: {
+            radius: 1
+          }
+        },
+        scales: {
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Percent'
+            }
+          }],
+          xAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Second'
+            }
+          }]
+        }
+      },
+      options3: {
+        responsive: true,
+        maintainAspectRatio: false,
+        elements: {
+          point: {
+            radius: 1
+          }
+        },
+        scales: {
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Megabyte'
+            }
+          }],
+          xAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Second'
+            }
+          }]
+        }
+      },
+      traps: '',
+      traps2: '',
+      showStats: '',
       datas: false,
       uptime: '',
       uptimeWifi: '',
@@ -144,61 +222,188 @@ export default {
       update: '',
       check: true,
       upload: false,
-      download: false
+      download: false,
+      hosts: 'http://localhost:3001'
     }
   },
   mounted () {
     var vm = this
-
+    //vm.sett()
     vm.getSysName()
     vm.getDetail()
-
-    vm.updateWifi = setInterval(function(){
-      vm.getWifi()
-    }, 5000)
-
     vm.getIndex()
     vm.getUptime()
-    vm.getUpAndDown()
-
-    // if (vm.datas) {
-      vm.getIsDescr()
-      vm.getMtu()
-      vm.getSpeed()
-      vm.getMac()
-      vm.getStat()
-      vm.getLastChange()
-    // }
-
     vm.update = setInterval(function(){
-      vm.getInOctets()
-      vm.getOutOctets()
-
-      vm.getTcpIn()
-      vm.getTcpOut()
-      vm.getUdpIn()
-      vm.getUdpOut()
-      vm.getIcmpIn()
-      vm.getIcmpOut()
-
+      if (vm.datas) {
+        vm.gettraps()
+        vm.getCPU()
+        vm.getFreeRAM()
+        vm.getIsDescr()
+        vm.getMtu()
+        // vm.getSpeed()
+        // vm.getMac()
+        vm.getStat()
+        vm.getPlug()
+        // vm.getLastChange()
+        //
+        // vm.getInOctets()
+        // vm.getOutOctets()
+        vm.getTcpIn()
+        vm.getTcpOut()
+        vm.getUdpIn()
+        vm.getUdpOut()
+        vm.getIcmpIn()
+        vm.getIcmpOut()
+        vm.fillDataudp()
+        vm.fillDatatcp()
+        vm.fillDataicmp()
+        vm.fillDatacpu()
+        vm.fillDataram()
+      }
       if (!vm.datas) {
         clearInterval(vm.update)
       }
-    }, 10000)
-
+    }, 5000)
   },
   methods: {
+    fillDataudp () {
+      this.datacollectionudp = {
+        labels: this.label,
+        datasets: [
+          {
+            label: 'udpIn',
+            backgroundColor: 'rgba(196, 93, 105, 0.3)',
+            data: this.udpIn
+          }, {
+            label: 'udpOut',
+            backgroundColor: 'rgba(32, 162, 219, 0.3)',
+            data: this.udpOut
+          }
+        ]
+      }
+    },
+    fillDatatcp () {
+      this.datacollectiontcp = {
+        labels: this.label,
+        datasets: [
+          {
+            label: 'tcpIn',
+            backgroundColor: 'rgba(196, 93, 105, 0.3)',
+            data: this.tcpIn
+          }, {
+            label: 'tcpOut',
+            backgroundColor: 'rgba(32, 162, 219, 0.3)',
+            data: this.tcpOut
+          }
+        ]
+      }
+    },
+    fillDataicmp () {
+      this.datacollectionicmp = {
+        labels: this.label,
+        datasets: [
+          {
+            label: 'icmpIn',
+            backgroundColor: 'rgba(196, 93, 105, 0.3)',
+            data: this.icmpIn
+          }, {
+            label: 'icmpOut',
+            backgroundColor: 'rgba(32, 162, 219, 0.3)',
+            data: this.icmpOut
+          }
+        ]
+      }
+    },
+    fillDatacpu () {
+      this.datacollectioncpu = {
+        labels: this.label,
+        datasets: [
+          {
+            label: 'cpu',
+            backgroundColor: 'rgba(196, 93, 105, 0.3)',
+            data: this.cpu
+          }
+        ]
+      }
+    },
+    fillDataram () {
+      this.datacollectionram = {
+        labels: this.label,
+        datasets: [
+          {
+            label: 'Memory',
+            backgroundColor: 'rgba(196, 93, 105, 0.3)',
+            data: this.ram
+          }
+        ]
+      }
+    },
+    mouseOver (index) {
+      var vm = this
+      var temp = {
+        interface : '',
+        mtu : '',
+        plug : '',
+        status : ''
+      }
+      temp.interface = vm.datas[index - 1].interface
+      temp.mtu = vm.datas[index - 1].mtu
+      temp.plug = vm.datas[index - 1].plug
+      temp.status = vm.datas[index - 1].status
+      this.showStats = temp
+      //this.showStats = this.datas[index - 1].interface + '<br>' + this.datas[index - 1].mtu + '<br>' + this.datas[index - 1].plug + '<br>' + this.datas[index - 1].status
+    },
+    mouseOut () {
+      var vm = this
+      this.ShowStat.interface = ''
+    },
+    setInterface (index, plug) {
+      var vm = this
+      // console.log(index)
+      var x
+      if (plug === 1) {
+        swal({
+          title: 'Are you sure?',
+          text: 'This port is plugged in.',
+          icon: 'warning',
+          buttons: true,
+          dangerMode: true,
+        })
+        .then((willDelete) => {
+          if (willDelete) {
+            swal('success', {
+              icon: 'success',
+            });
+            if (vm.datas[index - 1].status === 1) {
+              x = 2
+            } else {
+              x = 1
+            }
+            vm.$http.post(vm.hosts + '/setPort', {index: index, upDown: x}).then((res) => {
+              console.log(res)
+            })
+          } else {
+            swal('That a good idea!')
+          }
+        })
+      } else {
+        if (vm.datas[index - 1].status === 1) {
+          x = 2
+        } else {
+          x = 1
+        }
+        vm.$http.post(vm.hosts + '/setPort', {index: index, upDown: x}).then((res) => {
+          console.log(res)
+        })
+      }
+    },
     pause () {
       clearInterval(this.updateWifi)
       this.check = false
     },
-    resume () {
-      this.getWifi()
-      this.check = true
-    },
     getIndex () {
       var vm = this
-      vm.$http.get('/index').then((res) => {
+      vm.$http.get(vm.hosts + '/index').then((res) => {
         // console.log(res.data)
         vm.datas = res.data
       })
@@ -206,29 +411,39 @@ export default {
     getIsDescr () {
       var vm = this
       // console.log('IsDescr');
-      vm.$http.get('/isDescr').then((res) => {
+      vm.$http.get(vm.hosts + '/isDescr').then((res) => {
         var i = ''
         res.data.map((item) => {
-          i = vm.datas.findIndex(items => items.index === item.index)
-          vm.datas[i].interface = item.interface
-          // console.log(item.interface)
+          i = vm.datas.find(items => items.index === item.index)
+          i.interface = item.interface
         })
       })
     },
     getMtu () {
       var vm = this
       // console.log('MTU');
-      vm.$http.get('/mtu').then((res) => {
+      vm.$http.get(vm.hosts + '/mtu').then((res) => {
         var i = ''
         res.data.map((item) => {
-          i = vm.datas.findIndex(items => items.index === item.index)
-          vm.datas[i].mtu = item.mtu
+          i = vm.datas.find(items => items.index === item.index)
+          i.mtu = item.mtu
+        })
+      })
+    },
+    getPlug () {
+      var vm = this
+      // console.log('MTU');
+      vm.$http.get(vm.hosts + '/plug').then((res) => {
+        var i = ''
+        res.data.map((item) => {
+          i = vm.datas.find(items => items.index === item.index)
+          i.plug = item.plug
         })
       })
     },
     getSpeed () {
       var vm = this
-      vm.$http.get('/speed').then((res) => {
+      vm.$http.get(vm.hosts + '/speed').then((res) => {
         var i = ''
         res.data.map((item) => {
           i = vm.datas.findIndex(items => items.index === item.index)
@@ -238,7 +453,7 @@ export default {
     },
     getMac () {
       var vm = this
-      vm.$http.get('/mac').then((res) => {
+      vm.$http.get(vm.hosts + '/mac').then((res) => {
         var i = ''
         res.data.map((item) => {
           i = vm.datas.findIndex(items => items.index === item.index)
@@ -248,17 +463,17 @@ export default {
     },
     getStat () {
       var vm = this
-      vm.$http.get('/stat').then((res) => {
+      vm.$http.get(vm.hosts + '/stat').then((res) => {
         var i = ''
         res.data.map((item) => {
-          i = vm.datas.findIndex(items => items.index === item.index)
-          vm.datas[i].status = item.status
+          i = vm.datas.find(items => items.index === item.index)
+          i.status = item.status
         })
       })
     },
     getLastChange () {
       var vm = this
-      vm.$http.get('/lastChange').then((res) => {
+      vm.$http.get(vm.hosts + '/lastChange').then((res) => {
         var i = ''
         res.data.map((item) => {
           i = vm.datas.findIndex(items => items.index === item.index)
@@ -268,7 +483,7 @@ export default {
     },
     getInOctets () {
       var vm = this
-      vm.$http.get('/inOctets').then((res) => {
+      vm.$http.get(vm.hosts + '/inOctets').then((res) => {
         var i = ''
         res.data.map((item) => {
           i = vm.datas.findIndex(items => items.index === item.index)
@@ -278,7 +493,7 @@ export default {
     },
     getOutOctets () {
       var vm = this
-      vm.$http.get('/outOctets').then((res) => {
+      vm.$http.get(vm.hosts + '/outOctets').then((res) => {
         var i = ''
         res.data.map((item) => {
           i = vm.datas.findIndex(items => items.index === item.index)
@@ -288,114 +503,139 @@ export default {
     },
     getDetail () {
       var vm = this
-      vm.$http.get('/detail').then((res) => {
+      vm.$http.get(vm.hosts + '/detail').then((res) => {
         vm.detail = res.data
         // console.log('detail' + vm.detail)
       })
     },
     getUptime () {
       var vm = this
-      vm.$http.get('/uptime').then((res) => {
+      vm.$http.get(vm.hosts + '/uptime').then((res) => {
         // console.log(res.data)
         vm.uptime = res.data
       })
     },
     getSysName () {
       var vm = this
-      vm.$http.get('/sysname').then((res) => {
+      vm.$http.get(vm.hosts + '/sysname').then((res) => {
         // console.log(vm.uptime)
         vm.sysName = res.data
       })
     },
-    getUpAndDown () {
-      // console.log('updown')
-      var vm = this
-      vm.$http.get('/upAndDown').then((res) => {
-        vm.speed = res.data
-        vm.download = vm.speed.speeds.download
-        vm.upload = vm.speed.speeds.upload
-
-        var barData = {
-             labels : ['Download','Upload'],
-             datasets : [
-                 {
-                     fillColor : '#00ffab',
-                     strokeColor : '#ffffff',
-                     data : [vm.upload,vm.download]
-                 }
-             ]
-         }
-         var income = document.getElementById('income').getContext('2d')
-         new Chart(income).Bar(barData)
-      })
-    },
-    getWifi () {
-      var vm = this
-
-      vm.$http.get('/wifi').then((res) => {
-        vm.wifis = res.data
-        for (var i = 0; i < vm.wifis.length; i++) {
-          vm.wifis[i].per = vm.wifis[i].rssi+100
-          if (vm.wifis[i].per <= 20) {
-            vm.wifis[i].stat = 'danger'
-          } else if (vm.wifis[i].per <= 30) {
-            vm.wifis[i].stat = 'warning'
-          } else if (vm.wifis[i].per <= 50) {
-            vm.wifis[i].stat = 'info'
-          } else if (vm.wifis[i].per <= 70) {
-            vm.wifis[i].stat = 'success'
-          }
-        }
-        // console.log(vm.wifis)
-      })
-
-    },
     getTcpIn () {
       var vm = this
-      vm.$http.get('/tcpin').then((res) => {
-        // console.log(vm.uptime)
+      vm.$http.get(vm.hosts + '/tcpin').then((res) => {
+        // console.log(vm.uptim
+        vm.tcpIn.push(res.data)
         vm.tcp.in = res.data
       })
+      if (vm.tcpIn.length >= 31) {
+        vm.tcpIn = vm.tcpIn.slice(1, vm.tcpIn.length - 1)
+      }
     },
     getTcpOut () {
       var vm = this
-      vm.$http.get('/tcpout').then((res) => {
+      vm.$http.get(vm.hosts + '/tcpout').then((res) => {
         // console.log(vm.uptime)
+        vm.tcpOut.push(vm.tcp.out)
         vm.tcp.out = res.data
       })
+      if (vm.tcpOut.length >= 31) {
+        vm.tcpOut = vm.tcpOut.slice(1, vm.tcpOut.length - 1)
+      }
     },
     getUdpIn () {
       var vm = this
-      vm.$http.get('/udpin').then((res) => {
+      vm.$http.get(vm.hosts + '/udpin').then((res) => {
         // console.log(vm.uptime)
+        vm.udpIn.push(res.data)
         vm.udp.in = res.data
       })
+      var d = new Date();
+      if (vm.label.length < 31) {
+        vm.label.push(d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds())
+      } else {
+        vm.label = vm.label.slice(1, vm.label.length - 1)
+        vm.label.push(d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds())
+      }
+
+      if (vm.udpIn.length >= 31) {
+        vm.udpIn = vm.udpIn.slice(1, vm.udpIn.length - 1)
+      }
     },
     getUdpOut () {
       var vm = this
-      vm.$http.get('/udpout').then((res) => {
+      vm.$http.get(vm.hosts + '/udpout').then((res) => {
         // console.log(vm.uptime)
+        vm.udpOut.push(res.data)
         vm.udp.out = res.data
       })
+      if (vm.udpOut.length >= 31) {
+        vm.udpOut = vm.udpOut.slice(1, vm.udpOut.length - 1)
+      }
     },
     getIcmpIn () {
       var vm = this
-      vm.$http.get('/icmpin').then((res) => {
+      vm.$http.get(vm.hosts + '/icmpin').then((res) => {
         // console.log(vm.uptime)
+        vm.icmpIn.push(res.data)
         vm.icmp.in = res.data
       })
+      if (vm.icmpIn.length >= 31) {
+        vm.icmpIn = vm.icmpIn.slice(1, vm.icmpIn.length - 1)
+      }
     },
     getIcmpOut () {
       var vm = this
-      vm.$http.get('/icmpout').then((res) => {
+      vm.$http.get(vm.hosts + '/icmpout').then((res) => {
         // console.log(vm.uptime)
+        vm.icmpOut.push(res.data)
         vm.icmp.out = res.data
       })
+      if (vm.icmpOut.length >= 31) {
+        vm.icmpOut = vm.icmpOut.slice(1, vm.icmpOut.length - 1)
+      }
     },
-    timeCheck (uptime) {
-      return humanizeDuration(uptime)
+    shortWords (word, index) {
+      if (word.search('FastEthernet') !== -1) {
+        return 'Fa0/' + index
+      } else {
+        return word
+      }
+    },
+    getCPU () {
+      var vm = this
+      vm.$http.get(vm.hosts + '/cpu').then((res) => {
+        if (vm.cpu.length < 31) {
+          vm.cpu.push(parseInt(res.data))
+        } else {
+          vm.cpu = vm.cpu.slice(1, vm.cpu.length - 1)
+          vm.cpu.push(parseInt(res.data))
+        }
+      })
+    },
+    getFreeRAM() {
+      var vm = this
+      vm.$http.get(vm.hosts + '/ram').then((res) => {
+        if (vm.ram.length < 31) {
+          vm.ram.push(parseInt(res.data))
+        } else {
+          vm.ram = vm.ram.slice(1, vm.ram.length - 1)
+          vm.ram.push(parseInt(res.data))
+        }
+      })
+    },
+    gettraps () {
+      var vm = this
+      vm.$http.get(vm.hosts + '/traps').then((res) => {
+        if (res.data !== '' && res.data !== vm.traps2) {
+          vm.traps += res.data + '\n'
+        }
+        vm.traps2 = res.data
+        var elem = document.getElementById('data')
+        elem.scrollTop = elem.scrollHeight
+      })
     }
-
   }
 }
 </script>
@@ -416,8 +656,28 @@ html, body{
   height: 100%;
 }
 
+p.inter {
+  font-size: 12px;
+}
+
+button.red {
+  background-color: red;
+  height: 50px;
+  width: 50px;
+}
+
+button.green {
+  background-color: rgb(75, 240, 75);
+  height: 50px;
+  width: 50px;
+}
+
 p.p1 {
   float: left;
+}
+
+p.small {
+    line-height: 0.7;
 }
 
 .panel-heading {
@@ -441,11 +701,41 @@ div.boxs {
   padding: 0;
   /*height: 600px;*/
 }
+
+div.small {
+  line-height: 80%
+}
+
 .box1 {
   /*height: 100%;*/
-  height: 450px;
+  height: 210px;
   overflow-y: scroll;
 }
+
+.box11 {
+  /*height: 100%;*/
+  height: 350px;
+  overflow-y: scroll;
+}
+
+.box2 {
+  /*height: 100%;*/
+  height: 350px;
+  overflow-y: scroll;
+}
+
+.box20 {
+  /*height: 100%;*/
+  height: 210px;
+  overflow-y: scroll;
+}
+
+.box21 {
+  /*height: 100%;*/
+  height: 350px;
+  overflow-y: scroll;
+}
+
 
 .box1::-webkit-scrollbar-track {
   /*-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);*/
@@ -456,11 +746,89 @@ div.boxs {
 .box1::-webkit-scrollbar
 {
 	width: 3px;
+  height: 3px;
 	/*background-color: #F5F5F5;*/
   background-color: transparent;
 }
 
 .box1::-webkit-scrollbar-thumb
+{
+	background-color: #4F9FE5;
+}
+
+.box11::-webkit-scrollbar-track {
+  /*-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);*/
+	/*background-color: #F5F5F5;*/
+  background-color: transparent;
+}
+
+.box11::-webkit-scrollbar
+{
+	width: 3px;
+  height: 3px;
+	/*background-color: #F5F5F5;*/
+  background-color: transparent;
+}
+
+.box11::-webkit-scrollbar-thumb
+{
+	background-color: #4F9FE5;
+
+}
+
+.box2::-webkit-scrollbar-track {
+  /*-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);*/
+	/*background-color: #F5F5F5;*/
+  background-color: transparent;
+}
+
+.box2::-webkit-scrollbar
+{
+	width: 3px;
+  height: 3px;
+	/*background-color: #F5F5F5;*/
+  background-color: transparent;
+}
+
+.box2::-webkit-scrollbar-thumb
+{
+	background-color: #4F9FE5;
+}
+
+.box20::-webkit-scrollbar-track {
+  /*-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);*/
+	/*background-color: #F5F5F5;*/
+  background-color: transparent;
+}
+
+.box20::-webkit-scrollbar
+{
+	width: 3px;
+  height: 3px;
+	/*background-color: #F5F5F5;*/
+  background-color: transparent;
+}
+
+.box20::-webkit-scrollbar-thumb
+{
+	background-color: #4F9FE5;
+}
+
+.box21::-webkit-scrollbar-track {
+  /*-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);*/
+	/*background-color: #F5F5F5;*/
+  background-color: transparent;
+}
+
+.box21::-webkit-scrollbar
+{
+	width: 3px;
+  height: 3px;
+	/*background-color: #F5F5F5;*/
+  background-color: transparent;
+}
+
+.box21::-webkit-scrollbar-thumb
 {
 	background-color: #4F9FE5;
 }

@@ -11,12 +11,18 @@
   },
   "dependencies": {
     "axios": "^0.16.1",
+    "body-parser": "^1.18.2",
+    "chart.js": "^2.7.1",
     "express": "^4.15.2",
-    "vue": "^2.2.2",
+    "itsnmptrap": "0.0.1",
     "moment": "^2.13.0",
+    "network": "^0.4.1",
     "node-wifi-scanner": "^1.0.0",
     "snmp-native": "^1.0.21",
     "speedtest-net": "^1.2.5",
+    "sweetalert": "^2.1.0",
+    "vue": "^2.2.2",
+    "vue-chartjs": "^3.2.1",
     "wifiscanner": "0.0.10"
   },
   "devDependencies": {
