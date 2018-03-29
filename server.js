@@ -10,19 +10,23 @@ var HOST = '10.4.15.113';
 var dgram = require('dgram');
 var server = dgram.createSocket('udp4');
 
+
 var traps = ''
+var dat = ''
 server.on('listening', function () {
     var address = server.address();
     console.log('UDP Server listening on ' + address.address + ":" + address.port);
 })
 
 server.on('message', function (message, remote) {
+  var d = new Date();
+  dat = d.getDate()+'/'+ (d.getMonth()+1) + '/'+ d.getFullYear() + '  ' + d.getHours() + ':'+d.getMinutes()+':'+d.getSeconds()+' '
   traps = message
-  if(message.indexOf('Interface') != -1){
-
-  }
+  // if(message.indexOf('Interface') != -1){
+  //
+  // }
      //console.log(message.indexOf('Interface'));
-     console.log(remote.address + ':' + remote.port +' - ' + message);
+    //  console.log(remote.address + ':' + remote.port +' - ' + message);
 })
 
 server.bind(PORT, HOST)
@@ -176,7 +180,8 @@ app.use(express.static('dist'))
   })
 
   app.get('/traps', function (req, res, next) {
-    res.send(traps)
+    // var session = new snmp.Session({ host: host, community: community })
+    res.send({time: dat, snm: snmp.parse(traps)})
   })
 
   app.get('/stat', function (req, res, next) {
@@ -239,8 +244,9 @@ app.use(express.static('dist'))
       var session = new snmp.Session({ host: host, community: community })
       session.set({ oid: id, value: req.body.upDown, type: 2 }, function (error, varbind) {
         if (error) {
-            // console.log(error);
+          res.send(error)
         } else {
+          res.send('Done')
             console.log('The set is done.');
         }
         session.close();
@@ -275,7 +281,7 @@ app.use(express.static('dist'))
       } else {
         varbinds.forEach(function (vb) {
           // var ss = vb.value
-          value.push({'index':vb.oid[10],'inOctets':vb.value})
+          value.push({'index':vb.oid[10],'inOctets':vb.value / 1048576})
           // console.log(value)
         })
         res.send(value)
@@ -293,7 +299,7 @@ app.use(express.static('dist'))
       } else {
         varbinds.forEach(function (vb) {
           // var ss = vb.value
-          value.push({'index':vb.oid[10],'outOctets':vb.value})
+          value.push({'index':vb.oid[10],'outOctets':vb.value / 1048576})
           // console.log(value)
         })
         res.send(value)
@@ -313,7 +319,7 @@ app.use(express.static('dist'))
       } else {
         varbinds.forEach(function (vb) {
           // var ss = vb.value
-          value.push({'index':vb.value, 'interface': 'waiting', 'mtu': 'waiting', 'status': 'waiting', 'plug': 'waiting'})
+          value.push({'index':vb.value, 'interface': 'waiting', 'mtu': 'waiting', 'status': 'waiting', 'plug': 'waiting', 'lastChange': 'waiting', 'inOctets': 'waiting', 'outOctets': 'waiting'})
         })
         // console.log(value)
         res.send(value)

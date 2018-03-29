@@ -29,13 +29,14 @@
   <div class="col-md-4 box">
     <div class="panel panel-primary">
       <div class="panel-heading">Port Status</div>
-      <div class="panel-body box20 small">
-        <p>Interface: {{showStats.interface}}</p><br>
+      <div class="panel-body box20 small2">
+        <span v-html="showStats"> </span>
+        <!-- <p>Interface: {{showStats.interface}}</p><br>
         <p>MTU: {{showStats.mtu}}</p><br>
         <p v-if="showStats.plug === 1">Plug: In plug</p>
         <p v-else>Plug: Not plug</p><br>
         <p v-if="showStats.status === 1">Port: Up</p>
-        <p v-else>Port: Down</p><br><br>
+        <p v-else>Port: Down</p><br><br> -->
       </div>
     </div>
 </div>
@@ -43,7 +44,8 @@
   <div class="panel panel-primary">
     <div class="panel-heading">Trap</div>
     <div class="panel-body box21" id="data">
-      {{traps}}
+      <span v-html="traps"> </span>
+       <!-- {{traps}} -->
     </div>
   </div>
 </div>
@@ -246,8 +248,8 @@ export default {
         vm.getPlug()
         // vm.getLastChange()
         //
-        // vm.getInOctets()
-        // vm.getOutOctets()
+        vm.getInOctets()
+        vm.getOutOctets()
         vm.getTcpIn()
         vm.getTcpOut()
         vm.getUdpIn()
@@ -346,12 +348,25 @@ export default {
         plug : '',
         status : ''
       }
-      temp.interface = vm.datas[index - 1].interface
-      temp.mtu = vm.datas[index - 1].mtu
-      temp.plug = vm.datas[index - 1].plug
-      temp.status = vm.datas[index - 1].status
-      this.showStats = temp
-      //this.showStats = this.datas[index - 1].interface + '<br>' + this.datas[index - 1].mtu + '<br>' + this.datas[index - 1].plug + '<br>' + this.datas[index - 1].status
+      // temp.interface = vm.datas[index - 1].interface
+      // temp.mtu = vm.datas[index - 1].mtu
+      // temp.plug = vm.datas[index - 1].plug
+      // temp.status = vm.datas[index - 1].status
+      // this.showStats = temp
+      this.showStats = 'Interface: '+ this.datas[index - 1].interface + '<br>MTU: ' + this.datas[index - 1].mtu + '<br>'
+      if (this.datas[index - 1].plug === 1) {
+        this.showStats += 'Plug: In plug<br>'
+      } else {
+        this.showStats += 'Plug: Not plug<br>'
+      }
+
+      if (this.datas[index - 1].status === 1) {
+        this.showStats += 'Port: Up<br>'
+      } else {
+        this.showStats += 'Port: Down<br>'
+      }
+      // this.showStats += this.datas[index - 1].lastChange
+      this.showStats += '<br>In Octets: ' + this.datas[index - 1].inOctets + ' Mb<br>Out Octets: ' + this.datas[index - 1].outOctets + ' Mb'
     },
     mouseOut () {
       var vm = this
@@ -359,7 +374,6 @@ export default {
     },
     setInterface (index, plug) {
       var vm = this
-      // console.log(index)
       var x
       if (plug === 1) {
         swal({
@@ -476,8 +490,10 @@ export default {
       vm.$http.get(vm.hosts + '/lastChange').then((res) => {
         var i = ''
         res.data.map((item) => {
-          i = vm.datas.findIndex(items => items.index === item.index)
-          vm.datas[i].lastChange = item.lastChange
+          i = vm.datas.find(items => items.index === item.index)
+          var d = new Date(item.lastChange)
+          i.lastChange = d.getDate()+'/'+ (d.getMonth()+1) + '/'+ d.getFullYear() + '  ' + d.getHours() + ':'+d.getMinutes()+':'+d.getSeconds()+' '
+          // console.log(item.lastChange)
         })
       })
     },
@@ -486,8 +502,8 @@ export default {
       vm.$http.get(vm.hosts + '/inOctets').then((res) => {
         var i = ''
         res.data.map((item) => {
-          i = vm.datas.findIndex(items => items.index === item.index)
-          vm.datas[i].inOctets = item.inOctets
+          i = vm.datas.find(items => items.index === item.index)
+          i.inOctets = item.inOctets
         })
       })
     },
@@ -496,8 +512,8 @@ export default {
       vm.$http.get(vm.hosts + '/outOctets').then((res) => {
         var i = ''
         res.data.map((item) => {
-          i = vm.datas.findIndex(items => items.index === item.index)
-          vm.datas[i].outOctets = item.outOctets
+          i = vm.datas.find(items => items.index === item.index)
+          i.outOctets = item.outOctets
         })
       })
     },
@@ -628,10 +644,12 @@ export default {
     gettraps () {
       var vm = this
       vm.$http.get(vm.hosts + '/traps').then((res) => {
-        if (res.data !== '' && res.data !== vm.traps2) {
-          vm.traps += res.data + '\n'
+        // console.log(JSON.stringify(res.data.pdu.varbinds.filter(vb => vb.type == 4).map(vb => vb.value)))
+        let str = res.data.snm.pdu.varbinds.filter(vb => vb.type == 4).map(vb => vb.value)
+        if (res.data.snm !== '' && JSON.stringify(res.data.snm) !== vm.traps2) {
+          vm.traps += res.data.time + ' ' + str.toString('  ') + '</br>'
         }
-        vm.traps2 = res.data
+        vm.traps2 = JSON.stringify(res.data.snm)
         var elem = document.getElementById('data')
         elem.scrollTop = elem.scrollHeight
       })
@@ -680,6 +698,7 @@ p.small {
     line-height: 0.7;
 }
 
+
 .panel-heading {
      background-color: #32DC71 !important;
      font-size: 2em !important;
@@ -704,6 +723,10 @@ div.boxs {
 
 div.small {
   line-height: 80%
+}
+
+div.small2 {
+  line-height: 120%
 }
 
 .box1 {
